@@ -3,6 +3,7 @@
 import makeWASocket, {
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
   DisconnectReason,
 } from '@whiskeysockets/baileys'
 import pino from 'pino'
@@ -22,7 +23,13 @@ function log(msg) {
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState(CONFIG.sessionPath)
-  const { version } = await fetchLatestBaileysVersion()
+  // Prefer the current WA Web client version; fall back to Baileys' bundled lookup
+  let version
+  try {
+    ({ version } = await fetchLatestWaWebVersion())
+  } catch {
+    ({ version } = await fetchLatestBaileysVersion())
+  }
 
   sock = makeWASocket({
     version,
